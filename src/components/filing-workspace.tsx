@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState, type ChangeEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { FilingProgress } from "@/components/filing-progress";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -253,6 +253,8 @@ function FilingCard({
   };
 
   const uploadCompletedDoc = async (docType: CompletedDocType, file: File) => {
+    const contentType = file.type || "application/pdf";
+    let step = "getting upload URL";
     try {
       const presign = await api<{ upload_url: string; object_key: string }>(
         "/storage/completed-doc/upload-url",
@@ -262,11 +264,13 @@ function FilingCard({
             filing_id: filingId,
             doc_type: docType,
             filename: file.name,
-            content_type: file.type || "application/pdf",
+            content_type: contentType,
           },
         },
       );
+      step = "uploading file";
       await uploadToUrl(presign.upload_url, file);
+      step = "confirming upload";
       await api("/storage/completed-doc/confirm", {
         method: "POST",
         query: {
@@ -274,7 +278,7 @@ function FilingCard({
           doc_type: docType,
           object_key: presign.object_key,
           filename: file.name,
-          content_type: file.type || "application/pdf",
+          content_type: contentType,
           file_size: file.size,
         },
       });
@@ -282,7 +286,9 @@ function FilingCard({
       await qc.invalidateQueries({ queryKey: ["filing-directory", filingId] });
       await qc.invalidateQueries({ queryKey: ["filings"] });
     } catch (e: any) {
-      toast.error(e.message || "Failed to upload completed document");
+      console.error(`[uploadCompletedDoc] Failed at step "${step}":`, e);
+      const detail = e instanceof ApiError ? e.message : `Failed to fetch while ${step} — check backend CORS / server logs`;
+      toast.error(detail || "Failed to upload completed document");
     }
   };
 
