@@ -5,11 +5,12 @@ import { useAuth, rolePath } from "@/lib/auth";
 export const Route = createFileRoute("/")({ component: Index });
 
 function Index() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
+    if (loading) return;
     navigate({ to: user ? rolePath(user.role) : "/login" });
-  }, [user, navigate]);
+  }, [loading, user, navigate]);
   return (
     <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
       Redirecting…

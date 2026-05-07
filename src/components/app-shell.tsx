@@ -1,17 +1,35 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Bell, LogOut, Sun, Moon, Menu, X,
-  LayoutDashboard, Users, UserCog, FileText, ClipboardList, ScrollText, Mail, Folder, FileCheck,
+  Bell,
+  LogOut,
+  Sun,
+  Moon,
+  Menu,
+  X,
+  LayoutDashboard,
+  Users,
+  UserCog,
+  FileText,
+  ClipboardList,
+  ScrollText,
+  Mail,
+  Folder,
+  FileCheck,
 } from "lucide-react";
 import { useAuth, type Role } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -47,7 +65,12 @@ function Logo() {
     <div className="flex items-center gap-2">
       <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
         <rect x="2" y="2" width="28" height="28" rx="7" fill="var(--primary)" />
-        <path d="M9 11h14M9 16h14M9 21h9" stroke="var(--primary-foreground)" strokeWidth="2.2" strokeLinecap="round" />
+        <path
+          d="M9 11h14M9 16h14M9 21h9"
+          stroke="var(--primary-foreground)"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
       </svg>
       <span className="font-semibold tracking-tight">ITR Platform</span>
     </div>
@@ -63,14 +86,19 @@ function RoleBadge({ role }: { role: Role }) {
 }
 
 function ThemeToggle() {
-  const [dark, setDark] = useState(() =>
-    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+  const [dark, setDark] = useState(
+    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
   );
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
   return (
-    <Button variant="ghost" size="icon" onClick={() => setDark((d) => !d)} aria-label="Toggle theme">
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setDark((d) => !d)}
+      aria-label="Toggle theme"
+    >
       {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </Button>
   );
@@ -117,7 +145,12 @@ function NotificationsBell() {
       <PopoverContent align="end" className="w-[360px] p-0">
         <div className="flex items-center justify-between border-b px-4 py-2.5">
           <div className="text-sm font-semibold">Notifications</div>
-          <Button variant="ghost" size="sm" onClick={() => markAll.mutate()} disabled={!items.length}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => markAll.mutate()}
+            disabled={!items.length}
+          >
             Mark all read
           </Button>
         </div>
@@ -148,7 +181,13 @@ function NotificationsBell() {
                     <p className="text-sm leading-snug">{n.message || n.title}</p>
                     {n.created_at && (
                       <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        {(() => { try { return formatDistanceToNow(new Date(n.created_at), { addSuffix: true }); } catch { return ""; } })()}
+                        {(() => {
+                          try {
+                            return formatDistanceToNow(new Date(n.created_at), { addSuffix: true });
+                          } catch {
+                            return "";
+                          }
+                        })()}
                       </p>
                     )}
                   </div>
@@ -162,15 +201,21 @@ function NotificationsBell() {
   );
 }
 
-function Sidebar({ role, mobileOpen, onClose }: { role: Role; mobileOpen: boolean; onClose: () => void }) {
+function Sidebar({
+  role,
+  mobileOpen,
+  onClose,
+}: {
+  role: Role;
+  mobileOpen: boolean;
+  onClose: () => void;
+}) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const items = NAV[role];
 
   return (
     <>
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />
-      )}
+      {mobileOpen && <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />}
       <aside
         className={cn(
           "fixed md:sticky top-0 z-50 md:z-auto h-screen w-64 shrink-0 border-r bg-sidebar text-sidebar-foreground transition-transform md:translate-x-0",
@@ -178,14 +223,26 @@ function Sidebar({ role, mobileOpen, onClose }: { role: Role; mobileOpen: boolea
         )}
       >
         <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
-          <div className="text-sidebar-foreground"><Logo /></div>
-          <Button variant="ghost" size="icon" className="md:hidden text-sidebar-foreground hover:bg-sidebar-accent" onClick={onClose}>
+          <div className="text-sidebar-foreground">
+            <Logo />
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden text-sidebar-foreground hover:bg-sidebar-accent"
+            onClick={onClose}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
         <nav className="p-3 space-y-1">
           {items.map((item) => {
-            const active = path === item.to || (item.to !== "/partner" && item.to !== "/executive" && item.to !== "/client" && path.startsWith(item.to));
+            const active =
+              path === item.to ||
+              (item.to !== "/partner" &&
+                item.to !== "/executive" &&
+                item.to !== "/client" &&
+                path.startsWith(item.to));
             const isHomeMatch = path === item.to;
             const Icon = item.icon;
             return (
@@ -195,7 +252,7 @@ function Sidebar({ role, mobileOpen, onClose }: { role: Role; mobileOpen: boolea
                 onClick={onClose}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  (active || isHomeMatch)
+                  active || isHomeMatch
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 )}
@@ -214,21 +271,29 @@ function Sidebar({ role, mobileOpen, onClose }: { role: Role; mobileOpen: boolea
   );
 }
 
-export function AppShell({ children, requiredRole }: { children: React.ReactNode; requiredRole: Role }) {
-  const { user, logout } = useAuth();
+export function AppShell({
+  children,
+  requiredRole,
+}: {
+  children: React.ReactNode;
+  requiredRole: Role;
+}) {
+  const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
+    if (loading) return;
     if (!user) {
       navigate({ to: "/login" });
     } else if (user.role !== requiredRole) {
-      const dest = user.role === "PARTNER" ? "/partner" : user.role === "EXECUTIVE" ? "/executive" : "/client";
+      const dest =
+        user.role === "PARTNER" ? "/partner" : user.role === "EXECUTIVE" ? "/executive" : "/client";
       navigate({ to: dest });
     }
-  }, [user, requiredRole, navigate]);
+  }, [loading, user, requiredRole, navigate]);
 
-  if (!user || user.role !== requiredRole) {
+  if (loading || !user || user.role !== requiredRole) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
         Loading…
@@ -237,14 +302,23 @@ export function AppShell({ children, requiredRole }: { children: React.ReactNode
   }
 
   const initials = (user.full_name || user.email || "U")
-    .split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
+    .split(" ")
+    .map((s) => s[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="flex min-h-screen w-full bg-background">
       <Sidebar role={user.role} mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div className="flex flex-1 flex-col min-w-0">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-card/80 backdrop-blur px-4">
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileOpen(true)}
+          >
             <Menu className="h-4 w-4" />
           </Button>
           <RoleBadge role={user.role} />
@@ -255,7 +329,9 @@ export function AppShell({ children, requiredRole }: { children: React.ReactNode
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-full pl-1 pr-2.5 py-1 hover:bg-muted">
                   <Avatar className="h-7 w-7">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-[11px]">{initials}</AvatarFallback>
+                    <AvatarFallback className="bg-primary text-primary-foreground text-[11px]">
+                      {initials}
+                    </AvatarFallback>
                   </Avatar>
                   <span className="hidden sm:block text-sm font-medium max-w-[140px] truncate">
                     {user.full_name || user.email}
@@ -268,7 +344,10 @@ export function AppShell({ children, requiredRole }: { children: React.ReactNode
                   <div className="text-xs text-muted-foreground truncate">{user.email}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="text-destructive focus:text-destructive"
+                >
                   <LogOut className="h-4 w-4 mr-2" /> Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
