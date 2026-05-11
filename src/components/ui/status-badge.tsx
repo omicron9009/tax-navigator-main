@@ -67,6 +67,7 @@ export function AccountStatusBadge({ status }: { status: string }) {
     PENDING_VERIFICATION: "bg-warning/20 text-warning-foreground border-warning/40",
     ACTIVE: "bg-success/15 text-success border-success/30",
     REJECTED: "bg-destructive/15 text-destructive border-destructive/30",
+    DEACTIVATED: "bg-muted text-muted-foreground border-border",
     INACTIVE: "bg-muted text-muted-foreground border-border",
   };
   return (

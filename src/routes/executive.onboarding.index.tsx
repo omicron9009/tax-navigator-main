@@ -92,7 +92,7 @@ function ExecOnboardingBuilder() {
   });
   const updateOrder = useMutation({
     mutationFn: (vars: { id: string; order: number }) =>
-      api(`/onboarding/fields/${vars.id}`, { method: "PUT", body: { order: vars.order } }),
+      api(`/onboarding/fields/${vars.id}`, { method: "PUT", body: { display_order: vars.order } }),
   });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -109,7 +109,7 @@ function ExecOnboardingBuilder() {
     if (!draft.label.trim()) return;
     const fieldKey = draft.label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
     const body: any = {
-      field_label: draft.label, field_key: fieldKey, field_type: draft.field_type, is_required: draft.is_required, order: fields.length,
+      field_label: draft.label, field_key: fieldKey, field_type: draft.field_type, is_required: draft.is_required, display_order: fields.length,
     };
     if (draft.field_type === "DROPDOWN" && draft.options) {
       body.field_options = draft.options.split("\n").map((s) => s.trim()).filter(Boolean);

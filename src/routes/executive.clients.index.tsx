@@ -64,7 +64,7 @@ function MyClients() {
                   <td className="px-4 py-3 font-medium">{c.full_name || c.name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
                   <td className="px-4 py-3"><AccountStatusBadge status={c.account_status} /></td>
-                  <td className="px-4 py-3">{c.current_filing_status ? <FilingStatusBadge status={c.current_filing_status} /> : <span className="text-muted-foreground">—</span>}</td>
+                  <td className="px-4 py-3">{(c.current_state || c.current_filing_status) ? <FilingStatusBadge status={c.current_state || c.current_filing_status} /> : <span className="text-muted-foreground">—</span>}</td>
                 </tr>
               ))}
             </tbody>

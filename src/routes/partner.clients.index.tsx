@@ -77,6 +77,7 @@ function ClientList() {
               <SelectItem value="PENDING_VERIFICATION">Pending Verification</SelectItem>
               <SelectItem value="ACTIVE">Active</SelectItem>
               <SelectItem value="REJECTED">Rejected</SelectItem>
+              <SelectItem value="DEACTIVATED">Deactivated</SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={() => update({ search: q, page: 1 })}>Apply</Button>
@@ -113,10 +114,10 @@ function ClientList() {
                     <td className="px-4 py-3 font-medium">{c.full_name || c.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
                     <td className="px-4 py-3"><AccountStatusBadge status={c.account_status} /></td>
-                    <td className="px-4 py-3 text-muted-foreground">{c.assigned_executive_name || c.executive_name || "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{c.assigned_executive_name || "—"}</td>
                     <td className="px-4 py-3">
-                      {c.current_filing_status ? (
-                        <FilingStatusBadge status={c.current_filing_status} />
+                      {(c.current_state || c.current_filing_status) ? (
+                        <FilingStatusBadge status={c.current_state || c.current_filing_status} />
                       ) : <span className="text-muted-foreground">—</span>}
                     </td>
                   </tr>

@@ -1,7 +1,7 @@
 // Lightweight API client for the ITR Filing backend.
 // Token is held in memory only (set by AuthContext). 401 -> auth listener clears + redirects.
 
-export const API_BASE = "http://localhost:8000/api/v1";
+export const API_BASE = "http://192.168.1.106:8000/api/v1";
 
 let _token: string | null = null;
 let _onUnauthorized: (() => void) | null = null;

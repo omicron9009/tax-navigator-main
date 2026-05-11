@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { FilingStatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/page-states";
 import { Folder } from "lucide-react";
@@ -28,8 +29,9 @@ function MyFilings() {
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Financial Year</th>
                 <th className="px-4 py-3 text-left font-medium">Status</th>
+                <th className="px-4 py-3 text-left font-medium">Progress</th>
                 <th className="px-4 py-3 text-left font-medium">Initiated</th>
-                <th className="px-4 py-3 text-left font-medium">Last Updated</th>
+                <th className="px-4 py-3 text-left font-medium">Completed</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -37,8 +39,18 @@ function MyFilings() {
                 <tr key={f.filing_id || f.id} className="hover:bg-muted/30">
                   <td className="px-4 py-3 font-semibold">{f.financial_year}</td>
                   <td className="px-4 py-3"><FilingStatusBadge status={f.status} /></td>
-                  <td className="px-4 py-3 text-muted-foreground">{f.created_at ? new Date(f.created_at).toLocaleDateString() : "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{f.updated_at ? new Date(f.updated_at).toLocaleDateString() : "—"}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Progress value={f.progress_percentage ?? 0} className="h-2 w-20" />
+                      <span className="text-xs text-muted-foreground">{f.progress_percentage ?? 0}%</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {f.initiated_at ? new Date(f.initiated_at).toLocaleDateString() : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {f.completed_at ? new Date(f.completed_at).toLocaleDateString() : "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -12,19 +12,19 @@ export const Route = createFileRoute("/client/")({ component: ClientDashboard })
 function ClientDashboard() {
   const { user } = useAuth();
 
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: () => api<Record<string, unknown>>("/auth/me"),
+  const { data: dashboard } = useQuery({
+    queryKey: ["dashboard", "client"],
+    queryFn: () => api<any>("/dashboard/client"),
   });
 
-  const accountStatus = me?.account_status || "ACTIVE";
+  const accountStatus = dashboard?.account_status || "ACTIVE";
   const isPending = accountStatus === "PENDING_VERIFICATION";
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
-          Welcome{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
+          Welcome{dashboard?.full_name ? `, ${dashboard.full_name.split(" ")[0]}` : user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">Track your ITR filings and progress</p>
       </div>
@@ -49,15 +49,15 @@ function ClientDashboard() {
             <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <div className="text-xs text-muted-foreground">Name</div>
-                <div className="text-sm font-medium">{me?.full_name || user?.full_name}</div>
+                <div className="text-sm font-medium">{dashboard?.full_name || user?.full_name}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Email</div>
-                <div className="text-sm font-medium">{me?.email || user?.email}</div>
+                <div className="text-sm font-medium">{dashboard?.email || user?.email}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">PAN</div>
-                <div className="text-sm font-medium font-mono">{me?.pan_number || "—"}</div>
+                <div className="text-sm font-medium font-mono">{dashboard?.pan_number || "—"}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Status</div>

@@ -28,7 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { DocStatusChip, FilingStatusBadge, type FilingStatus } from "@/components/ui/status-badge";
 import { useAuth, type Role } from "@/lib/auth";
-import { Check, Download, FolderOpen, Plus, Send, Upload } from "lucide-react";
+import { Check, Download, FolderOpen, Plus, Send, Upload, OctagonX, History } from "lucide-react";
 import { toast } from "sonner";
 
 const FY_OPTIONS = [
@@ -38,7 +38,7 @@ const FY_OPTIONS = [
   { label: "FY 2025-26", value: "2025-2026" },
 ];
 
-const COMPLETED_DOC_TYPES = ["ITR_ACKNOWLEDGEMENT", "INVOICE"] as const;
+const COMPLETED_DOC_TYPES = ["ITR_ACKNOWLEDGEMENT", "INVOICE", "ITR_JSON"] as const;
 
 type CompletedDocType = (typeof COMPLETED_DOC_TYPES)[number];
 
@@ -111,6 +111,15 @@ function FilingCard({
   const [rejectFor, setRejectFor] = useState<any | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [selectedFy, setSelectedFy] = useState("");
+  const [haltOpen, setHaltOpen] = useState(false);
+  const [haltReason, setHaltReason] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const { data: historyData } = useQuery({
+    queryKey: ["filing-history", filingId],
+    queryFn: () => api<any[]>(`/filings/${filingId}/history`),
+    enabled: historyOpen && !!filingId,
+  });
 
   const assignDocuments = useMutation({
     mutationFn: async (docTypeIds: string[]) => {
@@ -315,6 +324,20 @@ function FilingCard({
     onError: (e: any) => toast.error(e.message || "Failed to approve computation"),
   });
 
+  const haltFiling = useMutation({
+    mutationFn: (reason: string) =>
+      api(`/filings/${filingId}/halt`, { method: "POST", body: { reason } }),
+    onSuccess: async () => {
+      toast.success("Filing halted");
+      setHaltOpen(false);
+      setHaltReason("");
+      await qc.invalidateQueries({ queryKey: ["filing-directory", filingId] });
+      await qc.invalidateQueries({ queryKey: ["filings"] });
+      await qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to halt filing"),
+  });
+
   const openDocumentDownload = async (documentId: string) => {
     try {
       const res = await api<{ download_url: string }>(`/documents/${documentId}/download-url`);
@@ -360,14 +383,26 @@ function FilingCard({
               : "Use this workspace to manage the filing lifecycle for this client."}
           </p>
         </div>
-        <div className="text-right text-xs text-muted-foreground">
-          <div>Last updated</div>
-          <div className="font-medium text-foreground">
-            {filing.updated_at
-              ? new Date(filing.updated_at).toLocaleString()
-              : filing.last_updated
-                ? new Date(filing.last_updated).toLocaleString()
-                : "—"}
+        <div className="flex items-start gap-3">
+          <div className="text-right text-xs text-muted-foreground">
+            <div>Last updated</div>
+            <div className="font-medium text-foreground">
+              {filing.updated_at
+                ? new Date(filing.updated_at).toLocaleString()
+                : filing.last_updated
+                  ? new Date(filing.last_updated).toLocaleString()
+                  : "—"}
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(true)} title="View history">
+              <History className="h-4 w-4" />
+            </Button>
+            {isReviewer && status !== "COMPLETED" && status !== "HALTED" && (
+              <Button size="sm" variant="ghost" onClick={() => setHaltOpen(true)} title="Halt filing" className="text-destructive hover:text-destructive">
+                <OctagonX className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -598,17 +633,14 @@ function FilingCard({
                   Filed Documents
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Acknowledgement and invoice are unlocked after completion.
+                  {status === "FILING"
+                    ? "Upload all 3 required documents (Acknowledgement, Invoice, ITR JSON) to advance to Payment."
+                    : "Acknowledgement, invoice, and ITR JSON for this filing."}
                 </p>
               </div>
-              {isReviewer && status === "FILING" && (
-                <Button onClick={() => setSelectedFy("ITR_ACKNOWLEDGEMENT")}>
-                  Upload acknowledgement
-                </Button>
-              )}
             </div>
 
-            {completedDocs.length === 0 ? (
+            {completedDocs.length === 0 && status !== "FILING" ? (
               <div className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
                 No filed documents available yet.
               </div>
@@ -630,7 +662,7 @@ function FilingCard({
                           )}
                         </div>
                       </div>
-                      <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                      <DocStatusChip status="APPROVED" />
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Button
@@ -646,47 +678,147 @@ function FilingCard({
               </div>
             )}
 
-            {isReviewer && status === "FILING" && (
-              <div className="mt-4 flex flex-wrap gap-3">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent">
-                  <Upload className="h-4 w-4" />
-                  Upload acknowledgement
-                  <Input
-                    className="hidden"
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                      const file = event.target.files?.[0];
-                      if (file) void uploadCompletedDoc("ITR_ACKNOWLEDGEMENT", file);
-                      event.target.value = "";
-                    }}
-                  />
-                </label>
-                <Button
-                  onClick={() => transition.mutate("PAYMENT")}
-                  disabled={transition.isPending}
-                >
-                  <Send className="mr-1 h-4 w-4" /> Mark as filed
-                </Button>
-              </div>
-            )}
+            {isReviewer && status === "FILING" && (() => {
+              const uploadedTypes = new Set(completedDocs.map((d: any) => d.doc_type));
+              const hasAck = uploadedTypes.has("ITR_ACKNOWLEDGEMENT");
+              const hasInvoice = uploadedTypes.has("INVOICE");
+              const hasItrJson = uploadedTypes.has("ITR_JSON");
+              const allUploaded = hasAck && hasInvoice && hasItrJson;
+              const uploadedCount = [hasAck, hasInvoice, hasItrJson].filter(Boolean).length;
+
+              return (
+                <div className="mt-4 space-y-3">
+                  <div className="rounded-lg border border-dashed bg-muted/30 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium">
+                        Upload Progress: {uploadedCount}/3 documents
+                      </span>
+                      {allUploaded && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success/15 text-success border border-success/30 px-2.5 py-0.5 text-xs font-medium">
+                          <Check className="h-3 w-3" /> All uploaded — filing will auto-advance to Payment
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <div className={`rounded-md border p-3 ${hasAck ? "border-success/40 bg-success/10" : "border-dashed"}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium">ITR Acknowledgement</span>
+                          {hasAck && <Check className="h-3.5 w-3.5 text-success" />}
+                        </div>
+                        {!hasAck ? (
+                          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent">
+                            <Upload className="h-3.5 w-3.5" />
+                            Upload
+                            <Input
+                              className="hidden"
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const file = event.target.files?.[0];
+                                if (file) void uploadCompletedDoc("ITR_ACKNOWLEDGEMENT", file);
+                                event.target.value = "";
+                              }}
+                            />
+                          </label>
+                        ) : (
+                          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent text-muted-foreground">
+                            <Upload className="h-3.5 w-3.5" />
+                            Replace
+                            <Input
+                              className="hidden"
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const file = event.target.files?.[0];
+                                if (file) void uploadCompletedDoc("ITR_ACKNOWLEDGEMENT", file);
+                                event.target.value = "";
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                      <div className={`rounded-md border p-3 ${hasInvoice ? "border-success/40 bg-success/10" : "border-dashed"}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium">Invoice</span>
+                          {hasInvoice && <Check className="h-3.5 w-3.5 text-success" />}
+                        </div>
+                        {!hasInvoice ? (
+                          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent">
+                            <Upload className="h-3.5 w-3.5" />
+                            Upload
+                            <Input
+                              className="hidden"
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const file = event.target.files?.[0];
+                                if (file) void uploadCompletedDoc("INVOICE", file);
+                                event.target.value = "";
+                              }}
+                            />
+                          </label>
+                        ) : (
+                          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent text-muted-foreground">
+                            <Upload className="h-3.5 w-3.5" />
+                            Replace
+                            <Input
+                              className="hidden"
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const file = event.target.files?.[0];
+                                if (file) void uploadCompletedDoc("INVOICE", file);
+                                event.target.value = "";
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                      <div className={`rounded-md border p-3 ${hasItrJson ? "border-success/40 bg-success/10" : "border-dashed"}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium">ITR JSON</span>
+                          {hasItrJson && <Check className="h-3.5 w-3.5 text-success" />}
+                        </div>
+                        {!hasItrJson ? (
+                          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent">
+                            <Upload className="h-3.5 w-3.5" />
+                            Upload
+                            <Input
+                              className="hidden"
+                              type="file"
+                              accept=".json,.pdf"
+                              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const file = event.target.files?.[0];
+                                if (file) void uploadCompletedDoc("ITR_JSON", file);
+                                event.target.value = "";
+                              }}
+                            />
+                          </label>
+                        ) : (
+                          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent text-muted-foreground">
+                            <Upload className="h-3.5 w-3.5" />
+                            Replace
+                            <Input
+                              className="hidden"
+                              type="file"
+                              accept=".json,.pdf"
+                              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const file = event.target.files?.[0];
+                                if (file) void uploadCompletedDoc("ITR_JSON", file);
+                                event.target.value = "";
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {isReviewer && status === "PAYMENT" && (
               <div className="mt-4 flex flex-wrap gap-3">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent">
-                  <Upload className="h-4 w-4" />
-                  Upload invoice
-                  <Input
-                    className="hidden"
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                      const file = event.target.files?.[0];
-                      if (file) void uploadCompletedDoc("INVOICE", file);
-                      event.target.value = "";
-                    }}
-                  />
-                </label>
                 <Button
                   onClick={() => markPaymentReceived.mutate()}
                   disabled={markPaymentReceived.isPending}
@@ -812,6 +944,71 @@ function FilingCard({
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={haltOpen} onOpenChange={setHaltOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Halt Filing</DialogTitle>
+            <DialogDescription>
+              Provide a reason for halting this filing. The client will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={haltReason}
+            onChange={(e) => setHaltReason(e.target.value)}
+            placeholder="Reason for halting this filing"
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHaltOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={!haltReason.trim() || haltFiling.isPending}
+              onClick={() => haltFiling.mutate(haltReason)}
+            >
+              Halt Filing
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Filing History</DialogTitle>
+            <DialogDescription>
+              State transitions for FY {filing.financial_year}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px]">
+            {!historyData || historyData.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No history available.</p>
+            ) : (
+              <div className="space-y-3">
+                {historyData.map((h: any) => (
+                  <div key={h.id} className="flex gap-3 rounded-md border p-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 text-sm">
+                        {h.from_status && (
+                          <>
+                            <span className="font-medium">{h.from_status.replace(/_/g, " ")}</span>
+                            <span className="text-muted-foreground">→</span>
+                          </>
+                        )}
+                        <span className="font-semibold">{h.to_status.replace(/_/g, " ")}</span>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {h.changed_by_name || "System"} · {h.changed_at ? new Date(h.changed_at).toLocaleString() : "—"}
+                      </div>
+                      {h.remarks && <div className="mt-1 text-xs text-muted-foreground italic">{h.remarks}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -845,7 +1042,7 @@ export function FilingWorkspace({ role, clientId, title, description }: FilingWo
 
   const initiate = useMutation({
     mutationFn: (financial_year: string) =>
-      api("/filings/initiate", { method: "POST", body: { financial_year, onboarding_data: {} } }),
+      api("/filings/initiate", { method: "POST", body: { financial_year } }),
     onSuccess: async () => {
       toast.success("Filing initiated");
       setOpen(false);

@@ -8,7 +8,7 @@ import { FilingStatusBadge, type FilingStatus } from "@/components/ui/status-bad
 
 export const Route = createFileRoute("/executive/")({ component: ExecutiveDashboard });
 
-const FILING_STATES: FilingStatus[] = ["INITIATED", "ON_BOARDING", "PROCESSING", "COMPUTATION", "FILING", "PAYMENT", "COMPLETED"];
+const FILING_STATES: FilingStatus[] = ["INITIATED", "ON_BOARDING", "PROCESSING", "COMPUTATION", "FILING", "PAYMENT", "COMPLETED", "HALTED"];
 
 function StatCard({ label, value, icon: Icon }: any) {
   return (

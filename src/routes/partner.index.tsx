@@ -17,7 +17,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/partner/")({ component: PartnerDashboard });
 
 const FILING_STATES: FilingStatus[] = [
-  "INITIATED", "ON_BOARDING", "PROCESSING", "COMPUTATION", "FILING", "PAYMENT", "COMPLETED",
+  "INITIATED", "ON_BOARDING", "PROCESSING", "COMPUTATION", "FILING", "PAYMENT", "COMPLETED", "HALTED",
 ];
 
 function StatCard({ label, value, icon: Icon, hint }: { label: string; value: number | string; icon: any; hint?: string }) {
@@ -76,10 +76,16 @@ function PartnerDashboard() {
     onError: (e: any) => toast.error(e.message || "Failed"),
   });
 
-  const openPan = async (documentId: string) => {
+  const openPan = async (client: any) => {
     try {
-      const res = await api<{ download_url: string }>(`/documents/${documentId}/download-url`);
-      window.open(res.download_url, "_blank");
+      if (client.pan_document_url) {
+        window.open(client.pan_document_url, "_blank");
+        return;
+      }
+      if (client.pan_document_id) {
+        const res = await api<{ download_url: string }>(`/storage/${client.pan_document_id}/download-url`);
+        window.open(res.download_url, "_blank");
+      }
     } catch (e: any) { toast.error(e.message || "Could not open document"); }
   };
 
@@ -151,7 +157,7 @@ function PartnerDashboard() {
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
                           {c.pan_document_id && (
-                            <Button size="sm" variant="outline" onClick={() => openPan(c.pan_document_id)}>
+                            <Button size="sm" variant="outline" onClick={() => openPan(c)}>
                               <ExternalLink className="h-3.5 w-3.5 mr-1" /> PAN
                             </Button>
                           )}

@@ -83,7 +83,7 @@ function Executives() {
                       e.is_active ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
                     }`}>{e.is_active ? "Active" : "Inactive"}</span>
                   </td>
-                  <td className="px-4 py-3">{e.client_count ?? e.assigned_clients ?? 0}</td>
+                  <td className="px-4 py-3">{e.assigned_client_count ?? e.client_count ?? 0}</td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end">
                       {e.is_active ? (
