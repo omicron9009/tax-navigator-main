@@ -1,4 +1,4 @@
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/components/layout/Sidebar";
 // Notice we no longer import the links here!
 
 export default function DashboardLayout({
