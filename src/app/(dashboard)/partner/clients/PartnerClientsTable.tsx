@@ -105,8 +105,9 @@ export default function PartnerClientsTable({
                   <th className="px-5 py-4 text-left font-semibold">
                     Client Name
                   </th>
+                  {/* High-leverage move: Merged Contact Column */}
                   <th className="px-5 py-4 text-left font-semibold">
-                    Email Address
+                    Contact Info
                   </th>
                   <th className="px-5 py-4 text-left font-semibold">
                     Assigned Executive
@@ -128,8 +129,22 @@ export default function PartnerClientsTable({
                     <td className="px-5 py-4 font-medium text-secondary">
                       {client.full_name}
                     </td>
-                    <td className="px-5 py-4 text-content-muted">
-                      {client.email}
+                    {/* The new stacked contact info cell */}
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-content-muted truncate">
+                          {client.email}
+                        </span>
+                        {client.phone_number && (
+                          <a
+                            href={`tel:${client.phone_number}`}
+                            title="Click to call"
+                            className="text-[11px] text-content-muted/70 hover:text-primary transition-colors font-mono tracking-tight"
+                          >
+                            {client.phone_number}
+                          </a>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4 text-content-muted">
                       {client.assigned_executive_name || (

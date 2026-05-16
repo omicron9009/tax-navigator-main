@@ -12,6 +12,7 @@ export type ClientListItem = {
   active_filing_years: string[];
   current_state: string | null;
   last_updated: string;
+  phone_number?: string | null;
 };
 
 export type ClientsApiResponse = {
@@ -19,6 +20,7 @@ export type ClientsApiResponse = {
   total: number;
   page: number;
   page_size: number;
+  phone_number?: string | null;
 };
 
 interface PageProps {
