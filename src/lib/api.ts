@@ -1,5 +1,5 @@
 // Lightweight API client for the ITR Filing backend.
-// Token is held in memory only (set by AuthContext). 401 -> auth listener clears + redirects.
+// Token is held in memory for Client requests, and read from cookies for Server requests.
 
 export const API_BASE = "http://127.0.0.1:8000/api/v1";
 
@@ -50,7 +50,27 @@ export async function api<T = any>(path: string, opts: Opts = {}): Promise<T> {
   if (body && !(body instanceof FormData) && !h["Content-Type"]) {
     h["Content-Type"] = "application/json";
   }
-  if (auth && _token) h["Authorization"] = `Bearer ${_token}`;
+
+  // --- Dynamic Authentication Resolution ---
+  if (auth) {
+    let currentToken = _token;
+
+    // If we're executing on the Next.js Server side, pull directly from headers
+    if (typeof window === "undefined") {
+      try {
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        // Assumes your cookie name is 'token'. Change to match your cookie configuration name if different.
+        currentToken = cookieStore.get("token")?.value || null;
+      } catch (e) {
+        console.error("Failed to read cookies on server context:", e);
+      }
+    }
+
+    if (currentToken) {
+      h["Authorization"] = `Bearer ${currentToken}`;
+    }
+  }
 
   const res = await fetch(url, {
     method,
@@ -65,7 +85,10 @@ export async function api<T = any>(path: string, opts: Opts = {}): Promise<T> {
   });
 
   if (res.status === 401 && auth) {
-    _onUnauthorized?.();
+    // Only fire the browser redirect handler if we are in the client context
+    if (typeof window !== "undefined") {
+      _onUnauthorized?.();
+    }
   }
 
   if (!res.ok) {

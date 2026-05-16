@@ -11,17 +11,20 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { api } from "@/lib/api";
 
-// 1. Updated Schema to include confirm_password and matching validation
 const schema = z
   .object({
     full_name: z.string().min(2, "Name is required"),
     email: z.string().email("Enter a valid email"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirm_password: z.string(),
+    phone_number: z
+      .string()
+      .min(10, "Phone number must be at least 10 digits")
+      .regex(/^[0-9+\-\s()]*$/, "Enter a valid phone number"),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords do not match",
-    path: ["confirm_password"], // Attaches the error to the confirm_password field
+    path: ["confirm_password"],
   });
 
 type FormValues = z.infer<typeof schema>;
@@ -78,27 +81,23 @@ export default function RegisterPage() {
   const onSubmit = async (values: FormValues) => {
     setSubmitting(true);
     try {
-      const apiPayload = {
-        full_name: values.full_name,
-        email: values.email,
-        password: values.password,
-      };
-
-      await api("/clients/register", {
+      const res = await api("/clients/register", {
         method: "POST",
-        body: apiPayload,
+        body: values,
         auth: false,
       });
 
-      toast.success("Account created! Please sign in.");
+      toast.success(res.message || "Account created successfully!");
       router.push("/login");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Registration failed.";
+      const msg =
+        err instanceof ApiError ? err.message : "Registration failed.";
       toast.error(msg);
     } finally {
       setSubmitting(false);
     }
   };
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white text-slate-900 font-sans">
       {/* --- TOP/RIGHT COLUMN: Image Background --- */}
@@ -158,6 +157,23 @@ export default function RegisterPage() {
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1.5 font-medium">
                   {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Phone Number
+              </label>
+              <input
+                {...register("phone_number")}
+                type="tel"
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
+                placeholder="+1 (555) 000-0000"
+              />
+              {errors.phone_number && (
+                <p className="text-red-500 text-xs mt-1.5 font-medium">
+                  {errors.phone_number.message}
                 </p>
               )}
             </div>

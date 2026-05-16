@@ -127,3 +127,17 @@
     @apply font-sans;
   }
 }
+
+/* --- The "Infinite Delay" Autofill Hack --- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  /* Tell the browser to take 9999 seconds to apply the background and text color changes */
+  -webkit-transition:
+    background-color 9999s ease-in-out 0s,
+    color 9999s ease-in-out 0s;
+  transition:
+    background-color 9999s ease-in-out 0s,
+    color 9999s ease-in-out 0s;
+}
