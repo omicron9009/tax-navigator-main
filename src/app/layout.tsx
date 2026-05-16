@@ -1,21 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
+import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -28,8 +19,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // suppressHydrationWarning is required here by next-themes!
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn(
         "h-full",
         "antialiased",
@@ -38,9 +31,23 @@ export default function RootLayout({
         inter.variable,
       )}
     >
-      <AuthProvider>
-        <body className="min-h-full flex flex-col">{children}</body>
-      </AuthProvider>
+      {/* Move the body tag OUTSIDE the providers */}
+      <body className="min-h-full flex flex-col">
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <div className="flex min-h-screen">
+              <main className="flex-1 flex flex-col">
+                <div>{children}</div>
+              </main>
+            </div>
+          </ThemeProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

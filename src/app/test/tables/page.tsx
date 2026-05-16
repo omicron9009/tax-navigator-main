@@ -9,6 +9,8 @@ import {
 } from "@/components/tables/client_status_table";
 import { TableProperties } from "lucide-react";
 
+import { StatusChip } from "@/components/shared/status_chip";
+
 // 1. Define our dummy data
 const tableData = [
   {
@@ -42,29 +44,6 @@ const tableData = [
     statuses: ["Payment", "Completed"],
   },
 ];
-
-// 2. Helper component for the colored status pills
-const StatusChip = ({ status }: { status: string }) => {
-  const variants: Record<string, string> = {
-    Initiated: "bg-slate-100 text-slate-600",
-    Onboarding: "bg-blue-50 text-blue-600",
-    Processing: "bg-amber-50 text-amber-700",
-    Computation: "bg-purple-50 text-purple-600",
-    Filing: "bg-indigo-50 text-indigo-600",
-    Payment: "bg-orange-50 text-orange-600",
-    Completed: "bg-emerald-50 text-emerald-600",
-  };
-
-  const colorClass = variants[status] || "bg-gray-100 text-gray-600";
-
-  return (
-    <span
-      className={`px-3 py-1 rounded-full text-xs font-medium ${colorClass}`}
-    >
-      {status}
-    </span>
-  );
-};
 
 export default function Home() {
   return (

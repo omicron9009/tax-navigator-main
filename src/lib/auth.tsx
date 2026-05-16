@@ -185,10 +185,20 @@ export function useAuth() {
   return ctx;
 }
 
-export function rolePath(role: Role) {
-  return role === "PARTNER"
-    ? "/partner"
-    : role === "EXECUTIVE"
-      ? "/executive"
-      : "/client";
+export function rolePath(role?: string) {
+  // if (!role) return "/client";
+
+  const normalizedRole = role?.toUpperCase();
+
+  switch (normalizedRole) {
+    case "PARTNER":
+      return "/partner";
+    case "EXECUTIVE":
+      return "/executive";
+    case "ADMIN":
+      return "/admin";
+    case "CLIENT":
+    default:
+      return "/client";
+  }
 }

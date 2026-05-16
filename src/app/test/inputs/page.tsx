@@ -75,13 +75,24 @@ export default function Home() {
                       Selected Option
                     </Label>
                   </div>
+                  {/* Selected Checkbox */}
+                  <div className="flex items-center space-x-3">
+                    <Checkbox
+                      id="selected"
+                      defaultChecked
+                      className="h-5 w-5"
+                    />
+                    <Label
+                      htmlFor="selected"
+                      className="font-normal text-base text-slate-700 cursor-pointer"
+                    >
+                      Selected Option
+                    </Label>
+                  </div>
 
                   {/* Unselected Checkbox */}
                   <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id="unselected"
-                      className="h-5 w-5 rounded border-slate-300"
-                    />
+                    <Checkbox id="unselected" className="h-5 w-5" />
                     <Label
                       htmlFor="unselected"
                       className="font-normal text-base text-slate-700 cursor-pointer"
