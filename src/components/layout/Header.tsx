@@ -4,10 +4,10 @@ import { User as UserIcon, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationsBell } from "@/components/layout/NotificationBell";
 import { useAuth } from "@/lib/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { resolvePageTitle } from "@/lib/navigation"; // 🛡️ Centralized lookup path
 
-// Import your Dropdown Menu components (assuming shadcn/ui)
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,11 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface HeaderProps {
-  title?: string;
-}
-
-// Helper to get initials
 function getInitials(name?: string) {
   if (!name) return null;
   return name
@@ -32,75 +27,85 @@ function getInitials(name?: string) {
     .toUpperCase();
 }
 
-export function Header({ title = "Dashboard" }: HeaderProps) {
-  // Grab 'logout' from your auth hook
+export default function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const initials = getInitials(user?.full_name);
 
+  // 🧠 THE SINGLE SOURCE OF TRUTH: Title resolution happens dynamically on the fly
+  const parsedTitle = resolvePageTitle(pathname);
+
   const handleLogout = async () => {
     try {
-      // Call your auth context's logout method to invalidate the cookie/state
       await logout();
       toast.success("Logged out successfully");
-      router.push("/login"); // Redirect to login page
+      router.push("/login");
     } catch (error) {
       toast.error("Failed to log out: " + error);
     }
   };
 
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-background px-6">
-      {/* Left Side: Current Page Title */}
-      <h1 className="text-lg font-semibold text-foreground tracking-tight">
-        {title}
-      </h1>
+    <header
+      style={{ backgroundColor: "#252834" }} // Soft premium charcoal layout tone
+      className="flex h-16 items-center justify-between border-b border-white/5 px-6 text-white font-sans antialiased shadow-sm select-none"
+    >
+      {/* Left Side: Dynamic Page Title */}
+      <div className="flex flex-col gap-0.5">
+        <h1 className="text-page-heading font-black tracking-tight text-white leading-none uppercase animate-in fade-in duration-200">
+          {parsedTitle}
+        </h1>
+      </div>
 
-      {/* Right Side: Notifications & Account */}
+      {/* Right Side: Notifications & Account Management */}
       <div className="flex items-center gap-4">
-        <NotificationsBell />
+        <div className="text-white/70 hover:text-white transition-colors">
+          <NotificationsBell />
+        </div>
 
-        {/* Account Details */}
-        <div className="flex items-center gap-3 pl-4 border-l">
-          <div className="hidden md:flex flex-col items-end text-sm">
-            <span className="font-medium leading-none">
-              {user?.full_name || "Loading..."}
+        {/* Account Details Tray */}
+        <div className="flex items-center gap-3 pl-4 border-l border-white/5">
+          <div className="hidden md:flex flex-col items-end text-right">
+            <span className="text-sm font-bold text-white/90 leading-none">
+              {user?.full_name || "Platform Admin"}
             </span>
-            <span className="text-xs text-muted-foreground mt-1">
-              {user?.email || "..."}
+            <span className="text-small text-white/40 font-mono mt-1">
+              {user?.email || "admin@itr-platform.com"}
             </span>
           </div>
 
-          {/* The Dropdown Wrapper */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Avatar className="h-9 w-9 border cursor-pointer hover:opacity-80 transition-opacity">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+              <Avatar className="h-9 w-9 border border-white/10 rounded-none cursor-pointer hover:opacity-90 transition-opacity">
+                <AvatarFallback className="bg-white text-[#0087ff] rounded-none text-xs font-black">
                   {initials ? initials : <UserIcon className="h-4 w-4" />}
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
 
-            {/* Dropdown Content */}
-            <DropdownMenuContent align="end" className="w-56 mt-1">
+            <DropdownMenuContent
+              align="end"
+              className="w-56 mt-2 rounded-none border border-surface-border bg-card shadow-soft"
+            >
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {user?.full_name}
+                  <p className="text-sm font-bold text-secondary leading-none">
+                    {user?.full_name || "Platform Admin"}
                   </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
+                  <p className="text-xs font-mono leading-none text-content-muted">
+                    {user?.email || "admin@itr-platform.com"}
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-surface-border" />
               <DropdownMenuItem
                 onClick={handleLogout}
-                className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                className="text-red-600 focus:text-red-600 focus:bg-red-50 rounded-none cursor-pointer font-medium text-xs py-2.5"
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <span>Log out of Session</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

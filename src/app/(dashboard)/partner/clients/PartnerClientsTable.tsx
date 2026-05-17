@@ -26,11 +26,8 @@ export default function PartnerClientsTable({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  // Handles updating URL query params natively
   const updateFilters = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
-
-    // Reset back to page 1 whenever filters change
     params.set("page", "1");
 
     Object.entries(updates).forEach(([key, value]) => {
@@ -100,12 +97,15 @@ export default function PartnerClientsTable({
         <Card className="overflow-hidden p-0 border border-surface-border shadow-soft rounded-none">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-secondary text-secondary-foreground text-xs uppercase tracking-wider">
+              {/* 🎨 THE NAVY PASS: Force header tracks to use your exact corporate navy block alignment */}
+              <thead
+                style={{ backgroundColor: "#071B3B" }}
+                className="text-white text-xs uppercase tracking-wider"
+              >
                 <tr>
                   <th className="px-5 py-4 text-left font-semibold">
                     Client Name
                   </th>
-                  {/* High-leverage move: Merged Contact Column */}
                   <th className="px-5 py-4 text-left font-semibold">
                     Contact Info
                   </th>
@@ -124,31 +124,34 @@ export default function PartnerClientsTable({
                 {apiData.items.map((client) => (
                   <tr
                     key={client.id}
-                    className="hover:bg-muted/50 transition-colors"
+                    // 🧠 THE SEAMLESS TRANSITION: Programmatic route push avoids dirty layout tree anchors
+                    onClick={() => router.push(`/partner/clients/${client.id}`)}
+                    // 🎨 DESIGN SYSTEM FOCUS: Added system background hovers, click-pointers, and group markers
+                    className="hover:bg-slate-50/80 transition-colors cursor-pointer select-none group"
                   >
-                    <td className="px-5 py-4 font-medium text-secondary">
+                    {/* Client Name highlights cleanly using your high-leverage energetic blue on row hover */}
+                    <td className="px-5 py-4 font-bold text-secondary group-hover:text-[#0087ff] transition-colors">
                       {client.full_name}
                     </td>
-                    {/* The new stacked contact info cell */}
                     <td className="px-5 py-4">
                       <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-content-muted truncate">
+                        <span className="text-content-muted truncate font-medium">
                           {client.email}
                         </span>
                         {client.phone_number && (
-                          <a
-                            href={`tel:${client.phone_number}`}
-                            title="Click to call"
-                            className="text-[11px] text-content-muted/70 hover:text-primary transition-colors font-mono tracking-tight"
+                          <span
+                            // Intercepting click mutations here prevents standard row navigation tracking if they try to select text
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[11px] text-content-muted/70 font-mono tracking-tight"
                           >
                             {client.phone_number}
-                          </a>
+                          </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-content-muted">
+                    <td className="px-5 py-4 text-content-muted font-medium">
                       {client.assigned_executive_name || (
-                        <span className="italic text-xs text-content-muted/60">
+                        <span className="italic text-xs text-content-muted/50">
                           Unassigned
                         </span>
                       )}

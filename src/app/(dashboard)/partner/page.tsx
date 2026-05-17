@@ -34,7 +34,27 @@ export default async function PartnerDashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white p-4 border border-surface-border shadow-soft rounded-none">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-content-light">
+            Total Pending Queue
+          </p>
+          <p className="text-2xl font-black text-brand-navy mt-1">2 Accounts</p>
+        </div>
+        <div className="bg-white p-4 border border-surface-border shadow-soft rounded-none">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-content-light">
+            Avg. Age in Queue
+          </p>
+          <p className="text-2xl font-black text-amber-600 mt-1">24.5 Hours</p>
+        </div>
+        <div className="bg-white p-4 border border-surface-border shadow-soft rounded-none">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-content-light">
+            SLA Compliance Rate
+          </p>
+          <p className="text-2xl font-black text-emerald-600 mt-1">98.4%</p>
+        </div>
+      </div>
+
       <div>
         <h1 className="text-[calc(var(--text-page-heading)*1.5)] font-bold tracking-tight text-secondary">
           Pending Partner Verifications

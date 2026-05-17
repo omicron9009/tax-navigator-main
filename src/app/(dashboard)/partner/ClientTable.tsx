@@ -62,8 +62,6 @@ export default function ClientTable({
   const [reason, setReason] = useState("");
   const [isActivating, setIsActivating] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
-
-  // We still need a way to refresh the table AFTER an action is taken
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadPending = useCallback(async () => {
@@ -146,7 +144,6 @@ export default function ClientTable({
   return (
     <>
       <section className="relative">
-        {/* Optional: Show a subtle spinner overlay when actions trigger a data refresh */}
         {isRefreshing && (
           <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -163,7 +160,11 @@ export default function ClientTable({
           <Card className="overflow-hidden p-0 border border-surface-border shadow-soft rounded-none">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-secondary text-secondary-foreground text-xs uppercase tracking-wider">
+                {/* 🎨 THE NAVY PASS: Force header tracks to use exact corporate navy block alignment */}
+                <thead
+                  style={{ backgroundColor: "#071B3B" }}
+                  className="text-white text-xs uppercase tracking-wider"
+                >
                   <tr>
                     <th className="px-5 py-4 text-left font-semibold">
                       Client
@@ -186,13 +187,13 @@ export default function ClientTable({
                       key={c.client_id || c.id || c.email}
                       className="hover:bg-muted/50 transition-colors"
                     >
-                      <td className="px-5 py-4 font-medium text-secondary">
+                      <td className="px-5 py-4 font-bold text-secondary">
                         {c.full_name || c.name}
                       </td>
-                      <td className="px-5 py-4 text-content-muted">
+                      <td className="px-5 py-4 text-content-muted font-medium">
                         {c.email}
                       </td>
-                      <td className="px-5 py-4 text-content-muted">
+                      <td className="px-5 py-4 text-content-muted font-medium">
                         {c.registered_at
                           ? new Date(c.registered_at).toLocaleDateString()
                           : "—"}
@@ -208,27 +209,33 @@ export default function ClientTable({
                             <Button
                               size="sm"
                               variant="outline"
-                              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                              className="border-[#071B3B] text-[#071B3B] hover:bg-[#071B3B] hover:text-white rounded-none font-bold text-xs h-8 px-3 transition-colors cursor-pointer"
                               onClick={() => openPan(c)}
                             >
-                              <ExternalLink className="h-4 w-4 mr-2" /> PAN
+                              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />{" "}
+                              PAN
                             </Button>
                           )}
+
                           <Button
                             size="sm"
-                            className="bg-primary text-primary-foreground hover:bg-primary/90"
+                            style={{ backgroundColor: "#071B3B" }}
+                            className="text-white hover:opacity-90 transition-opacity rounded-none font-bold text-xs h-8 px-3 cursor-pointer border-none disabled:opacity-40"
                             onClick={() => activateClient(c.client_id || c.id)}
                             disabled={isActivating || isRefreshing}
                           >
-                            <Check className="h-4 w-4 mr-2" /> Activate
+                            <Check className="h-3.5 w-3.5 mr-1.5 stroke-[3]" />{" "}
+                            Activate
                           </Button>
+
                           <Button
                             size="sm"
                             variant="destructive"
+                            className="rounded-none font-bold text-xs h-8 px-3 cursor-pointer"
                             onClick={() => setRejectFor(c)}
                             disabled={isRefreshing}
                           >
-                            <X className="h-4 w-4 mr-2" /> Reject
+                            <X className="h-3.5 w-3.5 mr-1.5" /> Reject
                           </Button>
                         </div>
                       </td>

@@ -60,15 +60,36 @@ export async function api<T = any>(path: string, opts: Opts = {}): Promise<T> {
       try {
         const { cookies } = await import("next/headers");
         const cookieStore = await cookies();
-        // Assumes your cookie name is 'token'. Change to match your cookie configuration name if different.
         currentToken = cookieStore.get("token")?.value || null;
+        console.log(
+          "🔒 [Server] Reading token from cookies:",
+          currentToken ? "✓ Found" : "✗ Not found"
+        );
       } catch (e) {
         console.error("Failed to read cookies on server context:", e);
       }
+    } else {
+      console.log(
+        "🔒 [Client] Using in-memory token:",
+        currentToken ? "✓ Found" : "✗ Not found"
+      );
     }
 
-    if (currentToken) {
-      h["Authorization"] = `Bearer ${currentToken}`;
+    // 🛡️ THE FIX: Guard against stringified placeholders and verify JWT segments
+    if (
+      currentToken &&
+      currentToken !== "undefined" &&
+      currentToken !== "null" &&
+      currentToken.trim() !== ""
+    ) {
+      // Defensive check: Verify it looks like a 3-part JWT before throwing it at the backend
+      if (currentToken.split(".").length === 3) {
+        h["Authorization"] = `Bearer ${currentToken}`;
+      } else {
+        console.warn(
+          `🔒 Suppressed deformed authorization header token block.`,
+        );
+      }
     }
   }
 
@@ -85,7 +106,6 @@ export async function api<T = any>(path: string, opts: Opts = {}): Promise<T> {
   });
 
   if (res.status === 401 && auth) {
-    // Only fire the browser redirect handler if we are in the client context
     if (typeof window !== "undefined") {
       _onUnauthorized?.();
     }
@@ -117,7 +137,6 @@ export async function api<T = any>(path: string, opts: Opts = {}): Promise<T> {
   return (await res.text()) as unknown as T;
 }
 
-// Two-step presigned upload helper
 export async function presignedUpload(opts: {
   presignUrl: string;
   presignBody: any;

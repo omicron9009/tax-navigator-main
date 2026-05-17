@@ -63,7 +63,7 @@ export default function HeroSection() {
                   <div className="w-3 h-3 rounded-full bg-green-400/80" />
                 </div>
                 <div className="ml-4 text-xs font-mono text-muted-foreground">
-                  app.itrplatform.com/client/fy24-25
+                  app.itrplatform.com/client/fy26-27
                 </div>
               </div>
 
@@ -73,11 +73,11 @@ export default function HeroSection() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-foreground">
-                      Financial Year 2024-25
+                      Financial Year 2026-27
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    {/* <p className="text-sm text-muted-foreground">
                       Assigned to: CA Joshya
-                    </p>
+                    </p> */}
                   </div>
                   <div className="px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold uppercase tracking-wider">
                     Processing

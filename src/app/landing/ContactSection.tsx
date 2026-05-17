@@ -96,7 +96,7 @@ export default function ContactSection() {
                 <textarea
                   rows={3}
                   className="w-full px-3 py-2 text-xs bg-muted/40 border border-border rounded-md outline-none focus:border-primary transition-all resize-none"
-                  placeholder="Inquiring about filing parameters for FY 2024-25..."
+                  placeholder="Inquiring about filing parameters for FY 2026-27..."
                   required
                 />
               </div>

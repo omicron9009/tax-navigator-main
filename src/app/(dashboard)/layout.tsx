@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/auth";
 import Sidebar from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
+import Header from "@/components/layout/Header";
 
 export default function DashboardLayout({
   children,

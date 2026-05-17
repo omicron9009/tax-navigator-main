@@ -3,8 +3,10 @@
 @import "shadcn/tailwind.css";
 
 @theme {
+  /* Core System Colors mapped cleanly to the v4 specification */
   --color-brand-blue: #0087ff;
   --color-brand-navy: #002f69;
+  --color-brand-teal: #0e9f9a; /* 💡 Brought over from your v3 config */
   --color-surface-bg: #eaebef;
   --color-white: #ffffff;
 
@@ -13,16 +15,22 @@
   --color-content-muted: #475569;
   --color-content-light: #94a3b8;
 
+  /* Beta Sandbox Token Override */
+  --color-beta-blue: #006fff; /* 💡 Standardized naming convention */
+
+  /* Typographic Baseline Definitions */
   --text-metric: 32px;
   --text-page-heading: 24px;
   --text-section-heading: 18px;
   --text-body: 14px;
   --text-small: 12px;
 
+  /* Custom Elevation Multipliers */
   --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
 }
 
 @theme inline {
+  /* Mapping fallback tokens back into shadcn runtime layouts */
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -80,11 +88,11 @@
 
   /* Primary: Vibrant Blue (#0087ff) */
   --primary: oklch(0.606 0.165 251.4);
-  --primary-foreground: oklch(1 0 0); /* White text on primary */
+  --primary-foreground: oklch(1 0 0);
 
   /* Secondary: Dark Navy (#002f69) */
   --secondary: oklch(0.282 0.082 258.3);
-  --secondary-foreground: oklch(1 0 0); /* White text on navy */
+  --secondary-foreground: oklch(1 0 0);
 
   --muted: oklch(0.937 0.006 258.3);
   --muted-foreground: oklch(0.55 0.04 258.3);
@@ -103,7 +111,7 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
 
-  /* Set to 0 to match the sharp, blocky edges from the Canva image */
+  /* 📐 Blocky, sharp edges set to 0 as required by your visual guide constraints */
   --radius: 0rem;
 
   --sidebar: oklch(0.937 0.006 258.3);
@@ -133,7 +141,6 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  /* Tell the browser to take 9999 seconds to apply the background and text color changes */
   -webkit-transition:
     background-color 9999s ease-in-out 0s,
     color 9999s ease-in-out 0s;

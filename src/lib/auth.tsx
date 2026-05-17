@@ -50,8 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(AUTH_TOKEN_KEY);
 
+      const isProduction = process.env.NODE_ENV === "production";
       document.cookie =
-        "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict; Secure";
+        `token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict${isProduction ? "; Secure" : ""}`;
     }
     setTokenState(null);
     setUser(null);
@@ -90,7 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // TODO: Remove this hard-coded value and use an environment variable instead
         if (typeof window !== "undefined") {
-          document.cookie = `token=${storedToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Strict; Secure`;
+          const isProduction = process.env.NODE_ENV === "production";
+          document.cookie = `token=${storedToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Strict${isProduction ? "; Secure" : ""}`;
         }
 
         let decoded: JwtPayload | null = null;
@@ -152,9 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (typeof window !== "undefined") {
         window.localStorage.setItem(AUTH_TOKEN_KEY, t);
 
-        // --- ADD THIS LINE TO SET THE COOKIE ---
-        // Sets a 'token' cookie valid across your entire domain for 7 days
-        document.cookie = `token=${t}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Strict; Secure`;
+        const isProduction = process.env.NODE_ENV === "production";
+        document.cookie = `token=${t}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Strict${isProduction ? "; Secure" : ""}`;
       }
       setTokenState(t);
 

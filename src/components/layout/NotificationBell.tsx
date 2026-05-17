@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Match the schema from your FastAPI docs
 interface Notification {
   id: string;
   title: string;
@@ -31,6 +30,7 @@ export function NotificationsBell() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
   const currentRole = pathname.split("/")[1] || "partner";
+
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!getAuthToken()) return;
@@ -70,7 +70,6 @@ export function NotificationsBell() {
         body: { notification_ids: [id] },
       });
 
-      // Update local state instantly for snappy UI
       setUnreadCount((prev) => Math.max(0, prev - 1));
       setItems((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)),
@@ -81,7 +80,7 @@ export function NotificationsBell() {
   };
 
   const handleMarkAll = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation when clicking this button
+    e.stopPropagation();
     try {
       await api("/notifications/mark-all-read", {
         method: "POST",
@@ -94,7 +93,6 @@ export function NotificationsBell() {
     }
   };
 
-  // Helper to format the date string cleanly
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
@@ -110,7 +108,6 @@ export function NotificationsBell() {
   };
 
   const handleMouseLeave = () => {
-    // Add a slight delay so the user can move their mouse into the popover content
     timeoutRef.current = setTimeout(() => {
       setIsOpen(false);
     }, 150);
@@ -121,83 +118,106 @@ export function NotificationsBell() {
     router.push(`/${currentRole}/notifications`);
   };
 
-  // Limit to latest 4 notifications for the preview
-  const previewItems = items.slice(0, 4);
+  const previewItems = items.slice(0, 3);
 
   return (
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="relative flex items-center justify-center"
+      className="relative flex items-center justify-center font-sans"
     >
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="relative text-muted-foreground hover:text-foreground hover:bg-muted"
+            className="relative h-10 w-10 text-white/70 hover:text-white rounded-full hover:bg-white/15 transition-all duration-200 cursor-pointer focus-visible:ring-1 focus-visible:ring-white/20 animate-none"
             aria-label="Notifications"
             onClick={handleBellClick}
           >
             <Bell className="h-5 w-5" />
+
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+              <span className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-black font-mono text-white ring-2 ring-[#12141C]">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             )}
           </Button>
         </PopoverTrigger>
 
-        {/* Added onMouseEnter/Leave here to keep it open when hovering the dropdown itself */}
         <PopoverContent
           align="end"
-          className="w-80 p-0 shadow-lg rounded-none border-surface-border"
+          sideOffset={8}
+          style={{ backgroundColor: "#12141C" }}
+          className="w-80 p-0 shadow-xl rounded-none border border-white/5 text-white mt-1 Gilbert-Design-Lab animate-in fade-in slide-in-from-top-1 duration-150"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="flex items-center justify-between border-b px-4 py-3 bg-secondary text-secondary-foreground">
-            <span className="font-semibold text-sm">Recent Notifications</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto p-0 text-xs text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-transparent"
+          {/* Header Track layout context containing explicitly mapped custom typography properties */}
+          <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 bg-[#12141C]">
+            <span className="font-bold text-[10px] uppercase tracking-wider text-white/40">
+              Recent Alerts
+            </span>
+            <button
+              type="button"
+              /* 🎨 FIXED LAYER: Hardcoded style scope bypasses inherited opacity filters completely */
+              style={{ color: "#0087ff" }}
+              className="text-[10px] font-black uppercase tracking-wider hover:opacity-80 transition-opacity disabled:opacity-20 disabled:pointer-events-none cursor-pointer border-none bg-transparent p-0"
               onClick={handleMarkAll}
               disabled={unreadCount === 0}
             >
-              Mark all as read
-            </Button>
+              Mark all read
+            </button>
           </div>
 
-          <ScrollArea className="max-h-100">
+          {/* Dynamic Feed Content Layout */}
+          <ScrollArea
+            style={{ backgroundColor: "#12141C" }}
+            className="max-h-80"
+          >
             {previewItems.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                You have no notifications.
+              <div className="p-8 text-center text-xs text-white/30 italic font-mono">
+                No active notifications pending review.
               </div>
             ) : (
-              <div className="flex flex-col">
+              <div className="flex flex-col divide-y divide-white/5">
                 {previewItems.map((notification) => (
                   <div
                     key={notification.id}
                     className={cn(
-                      "flex flex-col gap-1 border-b px-4 py-3 text-sm transition-colors hover:bg-muted/50 cursor-pointer",
-                      !notification.is_read && "bg-primary/5",
+                      "flex flex-col gap-1 px-4 py-3 text-xs transition-colors hover:bg-white/[0.03] cursor-pointer relative",
+                      !notification.is_read && "bg-white/[0.01]",
                     )}
                     onClick={() => {
                       if (!notification.is_read) handleMarkOne(notification.id);
                     }}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-medium text-secondary">
+                    {!notification.is_read && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-blue" />
+                    )}
+
+                    <div className="flex items-start justify-between gap-4">
+                      <span
+                        className={cn(
+                          "text-xs tracking-tight",
+                          !notification.is_read
+                            ? "font-bold text-white"
+                            : "font-medium text-white/80",
+                        )}
+                      >
                         {notification.title}
                       </span>
+
                       {!notification.is_read && (
-                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-blue" />
                       )}
                     </div>
-                    <p className="text-muted-foreground text-xs line-clamp-2">
+
+                    <p className="text-white/60 text-xs leading-normal font-medium pr-2">
                       {notification.message}
                     </p>
-                    <span className="text-[10px] text-muted-foreground/70 mt-1">
+
+                    <span className="text-[9px] text-white/30 font-mono mt-0.5 uppercase tracking-tight">
                       {formatDate(notification.created_at)}
                     </span>
                   </div>
@@ -206,12 +226,12 @@ export function NotificationsBell() {
             )}
           </ScrollArea>
 
-          {/* Footer link to view all */}
+          {/* Footer Action Anchor */}
           <div
-            className="p-3 text-center border-t text-sm font-medium text-primary cursor-pointer hover:bg-muted/50 transition-colors"
             onClick={handleBellClick}
+            className="p-3 text-center border-t border-white/5 text-[10px] font-bold text-white/50 uppercase tracking-widest cursor-pointer bg-[#12141C] hover:bg-white/[0.03] hover:text-white transition-colors"
           >
-            View all notifications
+            View Full Inbox
           </div>
         </PopoverContent>
       </Popover>
