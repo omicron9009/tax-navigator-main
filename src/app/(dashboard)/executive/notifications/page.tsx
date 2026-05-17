@@ -1,10 +1,13 @@
-// src/app/partner/notifications/page.tsx
+// src/app/executive/notifications/page.tsx
 import { NotificationsView } from "@/features/notifications/NotificationsView";
 
-export default function PartnerNotificationsPage({
+interface RoutePageProps {
+  searchParams: Promise<{ page?: string; unread_only?: string }>;
+}
+
+// 1. Root page catches the Next.js runtime injection slot
+export default function ExecutiveNotificationsPage({
   searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+}: RoutePageProps) {
   return <NotificationsView searchParams={searchParams} />;
 }

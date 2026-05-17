@@ -11,6 +11,7 @@ import {
   FileText,
   Bell,
   Mail,
+  Form,
 } from "lucide-react";
 
 type NavItem = {
@@ -25,7 +26,9 @@ const partnerLinks: NavItem[] = [
   { name: "All Clients", href: "/partner/clients", icon: Users },
   { name: "Executives", href: "/partner/executives", icon: UserSquare2 },
   { name: "Notifications", href: "/partner/notifications", icon: Bell },
+  { name: "Audit Log", href: "/partner/audit", icon: Form },
   { name: "Email Configuration", href: "/partner/email-config", icon: Mail },
+  { name: "Onboarding Form", href: "/partner/onboarding", icon: Bell },
 ];
 
 export const executiveLinks: NavItem[] = [
@@ -38,6 +41,7 @@ export const clientLinks: NavItem[] = [
   { name: "My Portal", href: "/client", icon: PieChart, exact: true },
   { name: "My Documents", href: "/client/filings", icon: FileText },
   { name: "Notifications", href: "/client/notifications", icon: Bell },
+  { name: "Onboarding Form", href: "/client/onboarding", icon: Bell },
 ];
 
 interface SidebarProps {

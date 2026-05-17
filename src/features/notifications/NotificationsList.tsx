@@ -1,7 +1,6 @@
-// src/features/notifications/NotificationsList.tsx
 "use client";
 
-import { useTransition, useState } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Bell, Check, CheckCheck, Loader2, Inbox } from "lucide-react";
 import { toast } from "sonner";
@@ -19,10 +18,10 @@ export default function NotificationsList({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  // The "You Don't Need an Effect" pattern for syncing props to state
   const [listItems, setListItems] = useState<NotificationItem[]>(
     initialData.items,
   );
+
   const [prevInitialItems, setPrevInitialItems] = useState<NotificationItem[]>(
     initialData.items,
   );
@@ -44,6 +43,7 @@ export default function NotificationsList({
   };
 
   const handleMarkAsRead = async (id: string) => {
+    // Optimistic state patch for snappy feedback click responses
     setListItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, is_read: true } : item)),
     );
@@ -53,7 +53,10 @@ export default function NotificationsList({
         method: "POST",
         body: { notification_ids: [id] },
       });
-      router.refresh();
+      // Force an endpoint invalidate re-fetch down the tree
+      startTransition(() => {
+        router.refresh();
+      });
     } catch (err) {
       toast.error("Failed to mark notification as read");
       setListItems(initialData.items);
@@ -67,8 +70,10 @@ export default function NotificationsList({
 
     try {
       await api("/notifications/mark-all-read", { method: "POST" });
-      toast.success("All notifications marked as read");
-      router.refresh();
+      toast.success("All alerts marked as read");
+      startTransition(() => {
+        router.refresh();
+      });
     } catch (err) {
       toast.error("Failed to execute batch update action");
       setListItems(initialData.items);
@@ -136,12 +141,12 @@ export default function NotificationsList({
             <Inbox className="h-5 w-5 text-content-muted/70" />
           </div>
           <h3 className="mt-4 text-sm font-semibold text-secondary">
-            Inbox clean
+            {activeFilters.unreadOnly ? "All caught up!" : "Inbox clean"}
           </h3>
           <p className="mt-1 text-xs text-content-muted max-w-sm mx-auto">
             {activeFilters.unreadOnly
               ? "You don't have any unread notifications waiting for review right now."
-              : "No notifications have been processed on your account profile yet."}
+              : "No system alerts have been logged for this profile yet."}
           </p>
         </Card>
       ) : (
@@ -152,7 +157,7 @@ export default function NotificationsList({
               className={`p-4 border shadow-soft rounded-none transition-all flex flex-row items-start justify-between gap-4 bg-card ${
                 !notification.is_read
                   ? "border-l-4 border-l-primary border-surface-border"
-                  : "border-surface-border opacity-80"
+                  : "border-surface-border opacity-70"
               }`}
             >
               {/* Left Side: Icon & Text Stack */}
@@ -173,9 +178,11 @@ export default function NotificationsList({
                   </span>
 
                   <div className="text-sm text-slate-900 dark:text-slate-100 leading-snug">
-                    <span className="font-bold text-slate-600 dark:text-slate-300 mr-1">
-                      {notification.user_name || "System User"}
-                    </span>
+                    {notification.user_name && (
+                      <span className="font-bold text-slate-600 dark:text-slate-300 mr-1">
+                        {notification.user_name}
+                      </span>
+                    )}
                     <span className="text-content-muted/90">
                       {notification.message}
                     </span>
@@ -220,8 +227,8 @@ export default function NotificationsList({
         </div>
       )}
 
-      {/* Pagination */}
-      {initialData.total > initialData.items.length && (
+      {/* Pagination Container */}
+      {initialData.total > initialData.page_size && (
         <div className="flex items-center justify-end gap-2 pt-2">
           <button
             disabled={activeFilters.page <= 1 || isPending}
