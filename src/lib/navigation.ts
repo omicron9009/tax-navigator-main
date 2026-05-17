@@ -24,7 +24,7 @@ export const NAVIGATION_MANIFEST = {
     { name: "Notifications", href: "/partner/notifications", icon: Bell },
     { name: "Audit Log", href: "/partner/audit", icon: Form },
     { name: "Email Configuration", href: "/partner/email-config", icon: Mail },
-    { name: "Onboarding Form", href: "/partner/onboarding", icon: Bell },
+    { name: "Onboarding Form", href: "/partner/onboarding", icon: Form },
   ],
   executive: [
     { name: "My Dashboard", href: "/executive", icon: PieChart, exact: true },
@@ -36,7 +36,7 @@ export const NAVIGATION_MANIFEST = {
     { name: "My Portal", href: "/client", icon: PieChart, exact: true },
     { name: "My Documents", href: "/client/filings", icon: FileText },
     { name: "Notifications", href: "/client/notifications", icon: Bell },
-    { name: "Onboarding Form", href: "/client/onboarding", icon: Bell },
+    { name: "Onboarding Form", href: "/client/onboarding", icon: Form },
   ],
 } as const;
 
