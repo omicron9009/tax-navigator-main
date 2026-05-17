@@ -17,6 +17,7 @@ export const Route = createFileRoute("/register")({ component: RegisterPage });
 const schema = z.object({
   full_name: z.string().min(2, "Enter your full name").max(100),
   email: z.string().email("Enter a valid email"),
+  phone_number: z.string().max(20, "Phone number too long").optional().or(z.literal("")),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 type V = z.infer<typeof schema>;
@@ -29,7 +30,13 @@ function RegisterPage() {
   const onSubmit = async (values: V) => {
     setLoading(true);
     try {
-      await api("/clients/register", { method: "POST", body: values, auth: false });
+      const body: Record<string, any> = {
+        email: values.email,
+        full_name: values.full_name,
+        password: values.password,
+      };
+      if (values.phone_number) body.phone_number = values.phone_number;
+      await api("/clients/register", { method: "POST", body, auth: false });
       setSubmitted(true);
       toast.success("Registration submitted");
     } catch (err: any) {
@@ -73,6 +80,11 @@ function RegisterPage() {
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" {...register("email")} />
                   {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone_number">Phone number <span className="text-muted-foreground">(optional)</span></Label>
+                  <Input id="phone_number" type="tel" placeholder="+91 9876543210" {...register("phone_number")} />
+                  {errors.phone_number && <p className="text-xs text-destructive">{errors.phone_number.message}</p>}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="password">Password</Label>

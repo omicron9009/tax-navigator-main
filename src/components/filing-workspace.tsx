@@ -28,7 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { DocStatusChip, FilingStatusBadge, type FilingStatus } from "@/components/ui/status-badge";
 import { useAuth, type Role } from "@/lib/auth";
-import { Check, Download, FolderOpen, Plus, Send, Upload, OctagonX, History } from "lucide-react";
+import { Check, Download, FolderOpen, Plus, Send, Upload, OctagonX, History, X } from "lucide-react";
 import { toast } from "sonner";
 
 const FY_OPTIONS = [
@@ -96,12 +96,27 @@ function FilingCard({
     enabled: !!filingId,
   });
 
+  // Clients: also fetch completed docs from the dedicated storage endpoint
+  // (the directory endpoint may not include them for clients at all statuses)
+  const { data: storageCompletedDocs } = useQuery({
+    queryKey: ["storage-completed-docs", filingId],
+    queryFn: () => api<any[]>(`/storage/completed-docs/${filingId}`),
+    enabled: !!filingId && isClient,
+  });
+
   const directory = directoryData || {};
   const documents = listFromResponse(directory.documents_required);
   const computations = listFromResponse(directory.computations).sort(
     (a: any, b: any) => (b.version ?? 0) - (a.version ?? 0),
   );
-  const completedDocs = listFromResponse(directory.completed_docs);
+  const directoryCompleted = listFromResponse(directory.completed_docs);
+  const storageCompleted = Array.isArray(storageCompletedDocs) ? storageCompletedDocs : [];
+  // Merge: use directory completed docs, but supplement with storage endpoint data for clients
+  const completedDocs = useMemo(() => {
+    if (directoryCompleted.length > 0) return directoryCompleted;
+    if (storageCompleted.length > 0) return storageCompleted;
+    return [];
+  }, [directoryCompleted, storageCompleted]);
   const currentComputation = computations[0] || null;
   const allDocumentsApproved =
     documents.length > 0 && documents.every((doc: any) => doc.status === "APPROVED");
@@ -114,6 +129,8 @@ function FilingCard({
   const [haltOpen, setHaltOpen] = useState(false);
   const [haltReason, setHaltReason] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [rejectCompFor, setRejectCompFor] = useState<any | null>(null);
+  const [rejectCompReason, setRejectCompReason] = useState("");
 
   const { data: historyData } = useQuery({
     queryKey: ["filing-history", filingId],
@@ -322,6 +339,19 @@ function FilingCard({
       await transition.mutateAsync("FILING");
     },
     onError: (e: any) => toast.error(e.message || "Failed to approve computation"),
+  });
+
+  const rejectComputation = useMutation({
+    mutationFn: (vars: { computationId: string; reason: string }) =>
+      api("/computations/reject", { method: "POST", body: { computation_id: vars.computationId, reason: vars.reason } }),
+    onSuccess: async () => {
+      toast.success("Computation rejected — executive will upload a new version");
+      setRejectCompFor(null);
+      setRejectCompReason("");
+      await qc.invalidateQueries({ queryKey: ["filing-directory", filingId] });
+      await qc.invalidateQueries({ queryKey: ["filings"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to reject computation"),
   });
 
   const haltFiling = useMutation({
@@ -586,9 +616,14 @@ function FilingCard({
                             <span> · Uploaded {new Date(comp.uploaded_at).toLocaleString()}</span>
                           )}
                         </div>
+                        {comp.status === "REJECTED" && comp.rejection_reason && (
+                          <div className="mt-1 text-xs text-destructive">
+                            Rejected: {comp.rejection_reason}
+                          </div>
+                        )}
                       </div>
                       <DocStatusChip
-                        status={comp.status === "APPROVED" ? "APPROVED" : "UPLOADED"}
+                        status={comp.status === "APPROVED" ? "APPROVED" : comp.status === "REJECTED" ? "REJECTED" : "UPLOADED"}
                       />
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -610,14 +645,24 @@ function FilingCard({
                             <Send className="mr-1 h-3.5 w-3.5" /> Move to filing
                           </Button>
                         )}
-                      {isClient && status === "COMPUTATION" && comp.status !== "APPROVED" && (
-                        <Button
-                          size="sm"
-                          onClick={() => approveComputation.mutate(comp.id)}
-                          disabled={approveComputation.isPending}
-                        >
-                          <Check className="mr-1 h-3.5 w-3.5" /> Approve computation
-                        </Button>
+                      {isClient && status === "COMPUTATION" && comp.status !== "APPROVED" && comp.status !== "REJECTED" && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => approveComputation.mutate(comp.id)}
+                            disabled={approveComputation.isPending}
+                          >
+                            <Check className="mr-1 h-3.5 w-3.5" /> Approve computation
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => setRejectCompFor(comp)}
+                            disabled={rejectComputation.isPending}
+                          >
+                            <X className="mr-1 h-3.5 w-3.5" /> Reject computation
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -967,6 +1012,37 @@ function FilingCard({
               onClick={() => haltFiling.mutate(haltReason)}
             >
               Halt Filing
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!rejectCompFor} onOpenChange={(open) => { if (!open) { setRejectCompFor(null); setRejectCompReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Computation</DialogTitle>
+            <DialogDescription>
+              Provide a reason for rejecting this computation. The executive will upload a revised version.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={rejectCompReason}
+            onChange={(e) => setRejectCompReason(e.target.value)}
+            placeholder="Reason for rejection (e.g., incorrect deductions, missing income sources)"
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setRejectCompFor(null); setRejectCompReason(""); }}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!rejectCompReason.trim() || rejectComputation.isPending}
+              onClick={() =>
+                rejectCompFor && rejectComputation.mutate({ computationId: rejectCompFor.id, reason: rejectCompReason })
+              }
+            >
+              Reject Computation
             </Button>
           </DialogFooter>
         </DialogContent>
